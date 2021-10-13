@@ -3,6 +3,9 @@ author: 'marcusljx'
 description: 'Move Container from GitHub Container Registry to Google Cloud Artifact Registry'
 
 inputs:
+  github_token:
+    description: 'GitHub Token'
+    required: true
   container_slug:
     description: 'Name of the container'
     required: false
@@ -67,9 +70,9 @@ runs:
     - uses: docker/login-action@v1
 #      if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
       with:
-        registry: ${{ env.GITHUB_CR }}
+        registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ inputs.github_token }}
 
     - shell: bash
 #      if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}

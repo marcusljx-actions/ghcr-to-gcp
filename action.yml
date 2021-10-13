@@ -42,38 +42,47 @@ runs:
         export_default_credentials: true
 
     - id: vars
+      shell: bash
       run: |
         echo "::set-output name=gh_container_path::ghcr.io/${{ inputs.container_slug }}"
         echo "::set-output name=gh_container_path_full::ghcr.io/${{ inputs.container_slug }}:${{ inputs.release_tag }}"
         echo "::set-output name=gcp_container_path::${{ inputs.gcp_service_region }}-docker.pkg.dev/${{ inputs.gcp_project_id }}/${{ inputs.gcp_container_repository }}/${{ inputs.container_slug }}"
         echo "::set-output name=gcp_container_path_full::${{ inputs.gcp_service_region }}-docker.pkg.dev/${{ inputs.gcp_project_id }}/${{ inputs.gcp_container_repository }}/${{ inputs.container_slug }}:${{ inputs.release_tag }}"
 
-    - id: gcp_artifacts_check
-      shell: bash
-      run: |
-        gcloud artifacts docker images list ${{ steps.vars.outputs.gcp_container_path }} --include-tags --filter "TAGS=${{ inputs.release_tag }}" \
-        | grep "${{ inputs.release_tag }}" \
-        && echo ::set-output name=contains_tag::0 \
-        || echo ::set-output name=contains_tag::1
+##################################################################################################
+# TODO: Uncomment Commented sections when https://github.com/actions/runner/issues/834 has merged
+##################################################################################################
+#    - id: gcp_artifacts_check
+#      shell: bash
+#      run: |
+#        gcloud artifacts docker images list ${{ steps.vars.outputs.gcp_container_path }} --include-tags --filter "TAGS=${{ inputs.release_tag }}" \
+#        | grep "${{ inputs.release_tag }}" \
+#        && echo ::set-output name=contains_tag::0 \
+#        || echo ::set-output name=contains_tag::1
+#
+#    - shell: bash
+#      run: echo "Container with tag ${{ inputs.release_tag }} already exists in GCP Artifact Registry. Exiting."
+#      if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '0' }}
 
-    - if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '0' }}
-      run: echo "Container with tag ${{ inputs.release_tag }} already exists in GCP Artifact Registry. Exiting."
-
-    - if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
-      uses: docker/login-action@v1
+    - uses: docker/login-action@v1
+#      if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
       with:
         registry: ${{ env.GITHUB_CR }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
+    - shell: bash
+#      if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
       run: docker pull ${{ steps.vars.outputs.gh_container_path_full }}
 
-    - if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
+    - shell: bash
+#      if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
       run: gcloud auth configure-docker ${{ inputs.gcp_service_region }}-docker.pkg.dev
 
-    - if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
+    - shell: bash
+#      if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
       run: docker tag ${{ steps.vars.outputs.gh_container_path_full }} ${{ steps.vars.outputs.gcp_container_path_full }}
 
-    - if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
+    - shell: bash
+#      if: ${{ steps.gcp_artifacts_check.outputs.contains_tag == '1' }}
       run: docker push ${{ steps.vars.outputs.gcp_container_path_full }}

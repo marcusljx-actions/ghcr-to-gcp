@@ -30,10 +30,10 @@ inputs:
 outputs:
   container_path:
     description: 'URI of the container that was pushed to GCP (without release tag)'
-    value: ${{ steps.vars.gcp_container_path }}
+    value: ${{ steps.vars.outputs.gcp_container_path }}
   container_path_full:
     description: 'URI of the container that was pushed to GCP'
-    value: ${{ steps.vars.gcp_container_path_full }}
+    value: ${{ steps.vars.outputs.gcp_container_path_full }}
 
 runs:
   using: "composite"
